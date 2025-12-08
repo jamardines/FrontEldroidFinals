@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:id="@+id/containerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Scrollable content -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <GridLayout
+                android:id="@+id/contentLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:orientation="horizontal"
+                android:padding="15dp"
+                android:alignmentMode="alignMargins"
+                android:useDefaultMargins="true">
+
+                <!-- Nine card items with equal size -->
+                <include
+                    android:id="@+id/item1"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item2"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item3"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item4"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item5"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item6"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item7"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item8"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+                <include
+                    android:id="@+id/item9"
+                    layout="@layout/itemview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="0.5" />
+
+            </GridLayout>
+
+        </ScrollView>
+
+        <!-- Bottom container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:padding="8dp">
+
+            <!-- Add to order button -->
+            <Button
+                android:id="@+id/Addbutton"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="2"
+                android:background="@drawable/borderadius"
+                android:text="Add to order"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <!-- Total price text -->
+            <TextView
+                android:id="@+id/totalPriceText"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="₱0.00"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:background="@drawable/itemborder"
+                android:layout_marginStart="8dp"/>
+
+        </LinearLayout>
+            <!-- Include the receipt layout -->
+            <include
+            android:id="@+id/receiptLayout"
+            layout="@layout/confirmationorder"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
