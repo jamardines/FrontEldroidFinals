@@ -5,22 +5,30 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.GridLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import android.widget.ImageButton
-import android.widget.Toast
 import androidx.core.view.WindowInsetsCompat
 
+
+
+
 class MainActivity : AppCompatActivity() {
+
+    private val products = mutableListOf<Product>()
+    private val itemViews = mutableListOf<View>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.menu_page)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -28,37 +36,31 @@ class MainActivity : AppCompatActivity() {
         }
 
         val tpriceText = findViewById<TextView>(R.id.totalPriceText)
+        val contentLayout = findViewById<GridLayout>(R.id.contentLayout)
 
-        // 9 item views
-        val itemViews = listOf(
-            findViewById<View>(R.id.item1),
-            findViewById<View>(R.id.item2),
-            findViewById<View>(R.id.item3),
-            findViewById<View>(R.id.item4),
-            findViewById<View>(R.id.item5),
-            findViewById<View>(R.id.item6),
-            findViewById<View>(R.id.item7),
-            findViewById<View>(R.id.item8),
-            findViewById<View>(R.id.item9)
-        )
+        // Fetch products from backend (example with hardcoded for now)
+        fetchProducts()
 
-        // list of products
-        val products = listOf(
-            Product(1, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 5),
-            Product(2, "Chicken Curry", 20.0, R.drawable.avocado, quantity = 0, stock = 3),
-            Product(3, "Salad", 30.0, R.drawable.avocado, quantity = 0, stock = 10),
-            Product(4, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 20),
-            Product(5, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 8),
-            Product(6, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 4),
-            Product(7, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 9),
-            Product(8, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 13),
-            Product(9, "Avocado", 10.0, R.drawable.avocado, quantity = 0, stock = 27),
+        // Dynamically create item views
+        products.forEach { product ->
+            val itemView = layoutInflater.inflate(R.layout.itemview, contentLayout, false)
 
-        )
 
-        // initialize UI
-        updateUI(products, itemViews, tpriceText)
+            //default size of item view
+            val params = GridLayout.LayoutParams().apply {
+                width = 0 // 0dp so weight works
+                height = GridLayout.LayoutParams.WRAP_CONTENT
+                columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f) // equal weight for columns
+                setMargins(8, 8, 8, 8)
+            }
+            itemView.layoutParams = params
+            contentLayout.addView(itemView)
+            itemViews.add(itemView)
+        }
 
+        updateUI()
+
+        // Setup button listeners for each dynamic item
         products.forEachIndexed { index, product ->
             val itemView = itemViews[index]
             val decBtn = itemView.findViewById<Button>(R.id.decreaseBtn0)
@@ -66,25 +68,22 @@ class MainActivity : AppCompatActivity() {
             val qntyEdit = itemView.findViewById<EditText>(R.id.quantityEdit0)
             val stockText = itemView.findViewById<TextView>(R.id.stockText0)
 
-            // decrease quantity
             decBtn.setOnClickListener {
                 if (product.quantity > 0) {
                     product.quantity--
-                    updateUI(products, itemViews, tpriceText)
+                    updateUI()
                 }
             }
 
-            // increase quantity
             incBtn.setOnClickListener {
                 if (product.quantity < product.stock) {
                     product.quantity++
-                    updateUI(products, itemViews, tpriceText)
+                    updateUI()
                 } else {
-                    print("Out of Stock")
+                    Toast.makeText(this, "Out of Stock", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            // when user edits quantity manually
             qntyEdit.setOnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
                     val input = qntyEdit.text.toString().toIntOrNull() ?: 0
@@ -98,81 +97,38 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         product.quantity = input
                     }
-                    updateUI(products, itemViews, tpriceText)
+                    updateUI()
                 }
             }
         }
 
         val addBtn = findViewById<Button>(R.id.Addbutton)
-        addBtn.setOnClickListener {
-            val orderedProducts = products.filter { it.quantity > 0 }
+        addBtn.setOnClickListener { showOrderDialog() }
 
-            if (orderedProducts.isEmpty()) {
-                AlertDialog.Builder(this)
-                    .setTitle("No items")
-                    .setMessage("Please select at least one item before adding to order.")
-                    .setPositiveButton("OK", null)
-                    .show()
-                return@setOnClickListener
-            }
-
-            // TODO: connect to backend to fetch updated stock before showing dialog
-            // GET
-
-            val dialog = Dialog(this)
-            dialog.setContentView(R.layout.confirmationorder)
-            dialog.setCancelable(true)
-
-            val backBtn = dialog.findViewById<ImageButton>(R.id.buttonBack)
-            backBtn.setOnClickListener {
-                dialog.dismiss()
-            }
-
-            val orderItemsContainer = dialog.findViewById<LinearLayout>(R.id.orderItemsContainer)
-            val totalPriceText = dialog.findViewById<TextView>(R.id.totalPrice)
-
-            val window = dialog.window
-            window?.setLayout(
-                (resources.displayMetrics.widthPixels * 0.85).toInt(), // 85% of screen width
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-
-            var total = 0.0
-            orderedProducts.forEach { product ->
-                val tv = TextView(this)
-                tv.text = "${product.name} x${product.quantity} - ₱${product.price * product.quantity}"
-                tv.textSize = 16f
-                orderItemsContainer.addView(tv)
-                total += product.price * product.quantity
-            }
-
-            totalPriceText.text = "₱%.2f".format(total)
-
-            val confirmBtn = dialog.findViewById<Button>(R.id.buttonConfirmOrder)
-            confirmBtn.setOnClickListener {
-
-                // TODO: send orderedProducts to backend to save order
-                // POST
-
-                Toast.makeText(this, "Order placed successfully!", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-                products.forEach { it.quantity = 0 }
-                updateUI(products, itemViews, tpriceText)
-
-                // TODO: optionally, call backend to update stock after order is placed
-                // PATCH /products/{id}/stock
-            }
-
-            dialog.show()
-        }
-
-        // TODO: if you want to fetch product list from backend instead of hardcoding,
-        // you can call API here and populate `products` list
-        // Example: GET /products -> update products list and call updateUI()
     }
 
-    // private function only in item view
-    private fun updateUI(products: List<Product>, itemViews: List<View>, tpriceText: TextView) {
+    private fun fetchProducts() {
+        // TODO: Replace with backend API call
+        products.clear()
+        products.addAll(
+            listOf(
+                Product(1, "Avocado", 10.0, R.drawable.avocado, 0, 5),
+                Product(2, "Chicken Curry", 20.0, R.drawable.avocado, 0, 3),
+                Product(3, "Salad", 30.0, R.drawable.avocado, 0, 10),
+                Product(4, "Avocado", 10.0, R.drawable.avocado, 0, 20),
+                Product(4, "Burger", 25.0, R.drawable.avocado, 0, 8),
+                Product(5, "Pizza", 50.0, R.drawable.avocado, 0, 6),
+                Product(6, "Pasta", 35.0, R.drawable.avocado, 0, 12),
+                Product(7, "Sushi", 40.0, R.drawable.avocado, 0, 7),
+                Product(8, "Ice Cream", 15.0, R.drawable.avocado, 0, 20),
+                Product(9, "Cake", 45.0, R.drawable.avocado, 0, 9)
+                // Add more dynamically from backend
+            )
+        )
+    }
+
+    private fun updateUI() {
+        val tpriceText = findViewById<TextView>(R.id.totalPriceText)
         products.forEachIndexed { index, product ->
             val itemView = itemViews[index]
             val qntyEdit = itemView.findViewById<EditText>(R.id.quantityEdit0)
@@ -183,13 +139,61 @@ class MainActivity : AppCompatActivity() {
             priceText.text = "₱${product.price}"
             nameText.text = product.name
             qntyEdit.setText(product.quantity.toString())
-            stockText.text =
-                if (product.stock - product.quantity > 0) "Stock: ${product.stock - product.quantity}" else "Out of Stock"
+            stockText.text = if (product.stock - product.quantity > 0)
+                "Stock: ${product.stock - product.quantity}" else "Out of Stock"
         }
 
         val total = products.sumOf { it.price * it.quantity }
         tpriceText.text = "₱%.2f".format(total)
-
     }
 
+    private fun showOrderDialog() {
+        val orderedProducts = products.filter { it.quantity > 0 }
+        if (orderedProducts.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("No items")
+                .setMessage("Please select at least one item before adding to order.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.confirmationorder)
+        dialog.setCancelable(true)
+
+        val window = dialog.window
+        window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.85).toInt(),
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+
+
+        val backBtn = dialog.findViewById<ImageButton>(R.id.buttonBack)
+        backBtn.setOnClickListener { dialog.dismiss() }
+
+        val orderItemsContainer = dialog.findViewById<LinearLayout>(R.id.orderItemsContainer)
+        val totalPriceText = dialog.findViewById<TextView>(R.id.totalPrice)
+
+        var total = 0.0
+        orderedProducts.forEach { product ->
+            val tv = TextView(this)
+            tv.text = "${product.name} x${product.quantity} - ₱${product.price * product.quantity}"
+            tv.textSize = 16f
+            orderItemsContainer.addView(tv)
+            total += product.price * product.quantity
+        }
+        totalPriceText.text = "₱%.2f".format(total)
+
+        val confirmBtn = dialog.findViewById<Button>(R.id.buttonConfirmOrder)
+        confirmBtn.setOnClickListener {
+            orderedProducts.forEach { it.stock -= it.quantity }
+            products.forEach { it.quantity = 0 }
+            updateUI()
+            dialog.dismiss()
+            Toast.makeText(this, "Order placed successfully!", Toast.LENGTH_SHORT).show()
+        }
+
+        dialog.show()
+    }
 }
